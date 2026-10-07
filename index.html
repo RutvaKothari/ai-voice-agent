@@ -25,31 +25,7 @@
             color: #1f2937;
         }
 
-        button {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 18px 35px;
-            font-size: 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            margin: 20px;
-        }
-
-        button:hover {
-            background: #1d4ed8;
-        }
-
-        .box {
-            background: #f3f4f6;
-            padding: 20px;
-            margin-top: 20px;
-            border-radius: 12px;
-            text-align: left;
-        }
-
-        #status {
-            font-weight: bold;
+        p {
             color: #555;
         }
     </style>
@@ -59,166 +35,33 @@
 
     <div class="container">
 
-        <h1>🤖 AI Voice Agent</h1>
+        <h1>🤖 AI Appointment Booking Agent</h1>
 
-        <p id="status">Click the button and start speaking</p>
+        <p>
+            Talk to our AI assistant to book an appointment.
+        </p>
 
-        <button onclick="startListening()">
-            🎤 Start Talking
-        </button>
+        <!-- Vapi Voice Agent -->
+        <script
+            src="https://unpkg.com/@vapi-ai/client-sdk-react/dist/embed/widget.umd.js"
+            async
+            type="text/javascript">
+        </script>
 
-        <div class="box">
-            <strong>You:</strong>
-            <p id="userText">---</p>
-        </div>
-
-        <div class="box">
-            <strong>AI:</strong>
-            <p id="aiText">---</p>
-        </div>
+        <vapi-widget
+            public-key="f49b3652-9dd9-4f47-9597-ed24076e5885"
+            assistant-id="02712fdf-b0aa-410d-b0fe-d9bc77021260"
+            mode="voice"
+            size="compact"
+            theme="light"
+            radius="large"
+            main-label="AI Appointment Assistant"
+            start-button-text="Start Voice Call"
+            end-button-text="End Call"
+            empty-voice-message="Click Start to talk with the AI assistant">
+        </vapi-widget>
 
     </div>
-
-
-    <script>
-
-        const WEBHOOK_URL =
-            "https://rutvakothari.app.n8n.cloud/webhook/voice-agent";
-
-
-        function startListening() {
-
-            const SpeechRecognition =
-                window.SpeechRecognition ||
-                window.webkitSpeechRecognition;
-
-            if (!SpeechRecognition) {
-
-                alert(
-                    "Speech recognition is not supported. Please use Google Chrome."
-                );
-
-                return;
-            }
-
-            const recognition = new SpeechRecognition();
-
-            recognition.lang = "en-IN";
-
-            recognition.interimResults = false;
-
-            recognition.continuous = false;
-
-
-            document.getElementById("status").innerText =
-                "🎤 Listening...";
-
-
-            recognition.start();
-
-
-            recognition.onresult = async function (event) {
-
-                const text =
-                    event.results[0][0].transcript;
-
-
-                document.getElementById("userText").innerText =
-                    text;
-
-
-                document.getElementById("status").innerText =
-                    "🤖 AI is thinking...";
-
-
-                try {
-
-                    const response = await fetch(
-                        WEBHOOK_URL,
-                        {
-                            method: "POST",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body: JSON.stringify({
-                                message: text
-                            })
-                        }
-                    );
-
-
-                    const raw = await response.text();
-
-                    console.log("n8n status:", response.status);
-                    console.log("n8n response:", raw);
-
-                    if (!raw) {
-                        throw new Error("n8n returned an empty response");
-                    }
-
-                    const data = JSON.parse(raw);
-
-                    const answer = data.response;
-
-
-                    document.getElementById("aiText").innerText =
-                        answer;
-
-
-                    document.getElementById("status").innerText =
-                        "🔊 AI is speaking...";
-
-
-                    const speech =
-                        new SpeechSynthesisUtterance(answer);
-
-
-                    speech.lang = "en-IN";
-
-
-                    speech.rate = 1;
-
-
-                    speech.pitch = 1;
-
-
-                    speech.onend = function () {
-
-                        document.getElementById("status").innerText =
-                            "🎤 Click Start Talking to speak again.";
-
-                    };
-
-
-                    window.speechSynthesis.speak(speech);
-
-                }
-
-                catch (error) {
-
-                    console.error(error);
-
-                    document.getElementById("status").innerText =
-                        "❌ Could not connect to n8n.";
-
-                }
-
-            };
-
-
-            recognition.onerror = function (event) {
-
-                document.getElementById("status").innerText =
-                    "❌ Microphone error: " + event.error;
-
-            };
-
-        }
-
-    </script>
 
 </body>
 
